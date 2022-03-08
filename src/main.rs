@@ -331,7 +331,7 @@ mod tests {
         async fn sgx() {
             let evidence = ext::sgx::Evidence {
                 pck: Certificate::from_der(include_bytes!("ext/sgx/sgx.pck")).unwrap(),
-                quote: &[],
+                quote: include_bytes!("ext/sgx/sgx.quote"),
             }
             .to_vec()
             .unwrap();
