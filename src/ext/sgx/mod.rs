@@ -110,6 +110,7 @@ impl ExtVerifier for Sgx {
     }
 }
 
+#[cfg(test)]
 #[macro_export]
 macro_rules! testaso {
     (@off $name:path=>$field:ident) => {

@@ -13,6 +13,7 @@ flags! {
     /// Section 38.7.1.
     #[derive(Ord, PartialOrd)]
     #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
+    #[allow(non_camel_case_types)]
     pub enum Flags: u64 {
         /// Enclave has been initialized by EINIT.
         INIT = 1 << 0,
@@ -41,6 +42,7 @@ flags! {
     /// Section 42.7.2.1; more info can be found at https://en.wikipedia.org/wiki/Control_register.
     #[derive(Ord, PartialOrd)]
     #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
+    #[allow(non_camel_case_types)]
     pub enum Xfrm: u64 {
         /// x87 FPU/MMX State, note, must be '1'.
         X87 = 1 << 0,

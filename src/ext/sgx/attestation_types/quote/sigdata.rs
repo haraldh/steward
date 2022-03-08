@@ -5,9 +5,9 @@
 use super::QuoteError;
 use crate::ext::sgx::attestation_types::report::Body;
 use anyhow::{Result};
-use der::{asn1::UIntBytes, Decodable, Encodable, Sequence};
-use openssl::x509::X509;
+use der::{asn1::UIntBytes, Encodable, Sequence};
 use std::{convert::TryFrom, fmt, vec::Vec};
+use x509::Certificate;
 
 /// ECDSA  signature, the r component followed by the
 /// s component, 2 x 32 bytes.
@@ -105,15 +105,15 @@ impl ECDSAPubKey {
 
 #[derive(Clone, Debug)]
 /// PCK Certificate Chain type of CertData
-pub struct PckCertChain {
+pub struct PckCertChain<'a> {
     /// Leaf certificate
-    pub leaf_cert: X509,
+    pub leaf: Certificate<'a>,
 
     /// Intermediate certificate
-    pub intermed_cert: X509,
+    pub intermediate: Certificate<'a>,
 
     /// Root certificate
-    pub root_cert: X509,
+    pub root: Certificate<'a>,
 }
 
 /// Section A.4, Table 9
@@ -312,32 +312,5 @@ impl SigData {
     /// Retrieve the QE Cert Data
     pub fn qe_cert_data_vec(&self) -> Vec<u8> {
         self.qe_cert_data.clone()
-    }
-
-    /// Returns QE Cert Data as a PCK certificate chain, if QE Cert Data is of the appropriate type
-    pub fn qe_cert_data_pckchain(&self) -> Result<PckCertChain, QuoteError> {
-        if self.qe_cert_data_type != CertDataType::PCKCertChain {
-            return Err(QuoteError(
-                "cannot return cert data as PCK cert chain; cert data is not PCK cert chain type"
-                    .to_string(),
-            ));
-        }
-
-        let chain = String::from_utf8(self.qe_cert_data_vec())
-            .map_err(|e| QuoteError(e.to_string()))?
-            .replace("-----END CERTIFICATE-----", "-----END CERTIFICATE-----\n");
-
-        let pck_cert_chain =
-            X509::stack_from_pem(chain.as_bytes()).map_err(|e| QuoteError(e.to_string()))?;
-
-        let leaf_cert = pck_cert_chain[0].clone();
-        let intermed_cert = pck_cert_chain[1].clone();
-        let root_cert = pck_cert_chain[2].clone();
-
-        Ok(PckCertChain {
-            leaf_cert,
-            intermed_cert,
-            root_cert,
-        })
     }
 }

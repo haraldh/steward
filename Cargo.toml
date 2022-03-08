@@ -17,9 +17,6 @@ sha2 = "^0.10.2"
 ring = { version = "0.16.20", features = ["std"] }
 zeroize = { version = "^1.5.2", features = ["alloc"] }
 flagset = "0.4.3"
-# TODO: remove some of these deps
-memoffset = "0.6.4"
-openssl = "0.10"
 
 tracing-subscriber = { version="^0.3.8", features = ["env-filter"] }
 axum = { version = "^0.4.3", features = ["headers"] }
@@ -34,3 +31,4 @@ mime = "^0.3.16"
 [dev-dependencies]
 tower = { version = "^0.4.11", features = ["util"] }
 http = "^0.2.6"
+memoffset = "0.6.4"
