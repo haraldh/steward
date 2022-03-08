@@ -6,11 +6,13 @@
 //! leaf function to verify that the enclave was properly built.
 
 use super::{attr::Attributes, isv, misc::MiscSelect};
+#[cfg(test)]
 use crate::testaso;
 
 use core::fmt::Debug;
 use core::ops::{BitAnd, BitOr, Not};
 
+use flagset::FlagSet;
 #[cfg(feature = "crypto")]
 use openssl::{bn, pkey, rsa};
 
@@ -110,7 +112,7 @@ impl Author {
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct Parameters {
     /// Bit vector specifying extended SSA frame feature set to be used.
-    pub misc: Masked<MiscSelect>,
+    pub misc: Masked<FlagSet<MiscSelect>>,
 
     /// Enclave attributes struct.
     pub attr: Masked<Attributes>,
@@ -145,7 +147,7 @@ impl Parameters {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Measurement {
-    misc: Masked<MiscSelect>,
+    misc: Masked<FlagSet<MiscSelect>>,
     reserved0: [u8; 20],
     attr: Masked<Attributes>,
     mrenclave: [u8; 32],

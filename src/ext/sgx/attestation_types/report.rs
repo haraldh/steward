@@ -13,6 +13,7 @@ use super::super::types::{
 
 use core::{convert::TryFrom, default::Default};
 
+use flagset::FlagSet;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
 
@@ -22,6 +23,8 @@ use serde_big_array::big_array;
 #[cfg(feature = "serialize")]
 big_array! { BigArray; }
 
+use crate::ext::sgx::types::attr::XfrmWrapper;
+#[cfg(test)]
 use crate::testaso;
 
 #[derive(Debug, Clone)]
@@ -39,7 +42,7 @@ pub struct Body {
 
     /// Bit vector specifying which extended features are saved to the
     /// MISC region of the SSA frame when an AEX occurs
-    pub miscselect: MiscSelect,
+    pub miscselect: FlagSet<MiscSelect>,
 
     /// Reserved
     reserved0: [u32; 7],
@@ -77,7 +80,7 @@ impl Default for Body {
     fn default() -> Self {
         Body {
             cpusvn: <[u8; 16]>::default(),
-            miscselect: MiscSelect::default(),
+            miscselect: FlagSet::default(),
             reserved0: <[u32; 7]>::default(),
             attributes: Attributes::default(),
             mrenclave: <[u8; 32]>::default(),
@@ -101,28 +104,28 @@ impl TryFrom<&[u8; 384]> for Body {
 
         let mut misc = [0u8; 4];
         misc.copy_from_slice(&bytes[16..20]);
-        let miscselect = MiscSelect::from_bits(u32::from_le_bytes(misc)).unwrap();
+        let miscselect = FlagSet::new(u32::from_le_bytes(misc)).unwrap();
 
         let mut f = [0u8; 8];
         let mut x = [0u8; 8];
         f.copy_from_slice(&bytes[48..56]);
         x.copy_from_slice(&bytes[56..64]);
 
-        let f = match Flags::from_bits(u64::from_le_bytes(f)) {
+        let f = match FlagSet::new(u64::from_le_bytes(f)).ok() {
             Some(f) => f,
             None => {
                 return Err(ReportError);
             }
         };
 
-        let x = match Xfrm::from_bits(u64::from_le_bytes(x)) {
+        let x = match FlagSet::new(u64::from_le_bytes(x)).ok() {
             Some(x) => x,
             None => {
                 return Err(ReportError);
             }
         };
 
-        let attributes = Attributes::new(f, x);
+        let attributes = Attributes::new(f, XfrmWrapper(x));
 
         let mut mrenclave = [0u8; 32];
         mrenclave.copy_from_slice(&bytes[64..96]);

@@ -923,7 +923,6 @@ dependencies = [
  "anyhow",
  "axum",
  "base64",
- "bitflags",
  "clap",
  "const-oid",
  "der",

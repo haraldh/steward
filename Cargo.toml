@@ -18,7 +18,6 @@ ring = { version = "0.16.20", features = ["std"] }
 zeroize = { version = "^1.5.2", features = ["alloc"] }
 flagset = "0.4.3"
 # TODO: remove some of these deps
-bitflags = "1.2"
 memoffset = "0.6.4"
 openssl = "0.10"
 

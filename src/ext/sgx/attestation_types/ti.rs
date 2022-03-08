@@ -4,10 +4,11 @@
 //! The Target Info is used to identify the target enclave that will be able to cryptographically
 //! verify the REPORT structure returned by the EREPORT leaf. Must be 512-byte aligned.
 
-use crate::{
-    ext::sgx::types::{attr::Attributes, misc::MiscSelect},
-    testaso,
-};
+use flagset::FlagSet;
+
+use crate::ext::sgx::types::{attr::Attributes, misc::MiscSelect};
+#[cfg(test)]
+use crate::testaso;
 use core::default::Default;
 
 /// Table 38-22
@@ -20,7 +21,7 @@ pub struct TargetInfo {
     pub attributes: Attributes,
     reserved0: u32,
     /// MiscSelect of the target enclave.
-    pub misc: MiscSelect,
+    pub misc: FlagSet<MiscSelect>,
     reserved1: [u64; 32],
     reserved2: [u64; 25],
 }

@@ -7,7 +7,10 @@
 //! page created for any enclave. It is moved from a temporary buffer to an EPC
 //! by the means of ENCLS(ECREATE) leaf.
 
+use flagset::FlagSet;
+
 use super::{attr, isv, misc::MiscSelect};
+#[cfg(test)]
 use crate::testaso;
 use core::num::NonZeroU32;
 
@@ -18,7 +21,7 @@ pub struct Secs {
     size: u64,
     baseaddr: u64,
     ssaframesize: NonZeroU32,
-    miscselect: MiscSelect,
+    miscselect: FlagSet<MiscSelect>,
     reserved0: [u8; 24],
     attributes: attr::Attributes,
     mrenclave: [u8; 32],

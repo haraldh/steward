@@ -3,29 +3,31 @@
 //! Attributes (Section 38.7.1)
 //! The attributes of an enclave are specified by the struct below as described.
 
+#[cfg(test)]
+use crate::testaso;
+use flagset::{flags, FlagSet};
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
 
-use crate::testaso;
-
-bitflags::bitflags! {
+flags! {
     /// Section 38.7.1.
+    #[derive(Ord, PartialOrd)]
     #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-    pub struct Flags: u64 {
+    pub enum Flags: u64 {
         /// Enclave has been initialized by EINIT.
-        const INIT = 1 << 0;
+        INIT = 1 << 0,
         /// Perm for debugger to r/w enclave data with EDBGRD and EDBGWR.
-        const DEBUG = 1 << 1;
+        DEBUG = 1 << 1,
         /// Enclave runs in 64-bit mode.
-        const BIT64 = 1 << 2;
+        BIT64 = 1 << 2,
         /// Provisioning Key is available from EGETKEY.
-        const PROV_KEY = 1 << 4;
+        PROV_KEY = 1 << 4,
         /// EINIT token key is available from EGETKEY.
-        const EINIT_KEY = 1 << 5;
+        EINIT_KEY = 1 << 5,
         /// Enable CET attributes.
-        const CET = 1 << 6;
+        CET = 1 << 6,
         /// Key Separation and Sharing enabled.
-        const KSS = 1 << 7;
+        KSS = 1 << 7
     }
 }
 
@@ -35,52 +37,56 @@ impl Default for Flags {
     }
 }
 
-bitflags::bitflags! {
+flags! {
     /// Section 42.7.2.1; more info can be found at https://en.wikipedia.org/wiki/Control_register.
+    #[derive(Ord, PartialOrd)]
     #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-    pub struct Xfrm: u64 {
+    pub enum Xfrm: u64 {
         /// x87 FPU/MMX State, note, must be '1'.
-        const X87 = 1 << 0;
+        X87 = 1 << 0,
         /// XSAVE feature set enable for MXCSR and XMM regs.
-        const SSE = 1 << 1;
+        SSE = 1 << 1,
         /// AVX enable and XSAVE feature set can be used to manage YMM regs.
-        const AVX = 1 << 2;
+        AVX = 1 << 2,
         /// MPX enable and XSAVE feature set can be used for BND regs.
-        const BNDREG = 1 << 3;
+        BNDREG = 1 << 3,
         /// PMX enable and XSAVE feature set can be used for BNDCFGU and BNDSTATUS regs.
-        const BNDCSR =  1 << 4;
+        BNDCSR =  1 << 4,
         /// AVX-512 enable and XSAVE feature set can be used for AVX opmask, AKA k-mask, regs.
-        const OPMASK = 1 << 5;
+        OPMASK = 1 << 5,
         /// AVX-512 enable and XSAVE feature set can be used for upper-halves of the lower ZMM regs.
-        const ZMM_HI256 = 1 << 6;
+        ZMM_HI256 = 1 << 6,
         /// AVX-512 enable and XSAVE feature set can be used for the upper ZMM regs.
-        const HI16_ZMM = 1 << 7;
+        HI16_ZMM = 1 << 7,
         /// XSAVE feature set can be used for PKRU register (part of protection keys mechanism).
-        const PKRU = 1 << 9;
+        PKRU = 1 << 9,
         /// Control-flow Enforcement Technology (CET) user state.
-        const CETU = 1 << 11;
+        CETU = 1 << 11,
         /// Control-flow Enforcement Technology (CET) supervisor state.
-        const CETS = 1 << 12;
+        CETS = 1 << 12
     }
 }
 
-impl Default for Xfrm {
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct XfrmWrapper(pub FlagSet<Xfrm>);
+
+impl Default for XfrmWrapper {
     fn default() -> Self {
-        Self::X87 | Self::SSE
+        XfrmWrapper(Xfrm::X87 | Xfrm::SSE)
     }
 }
 
 /// Section 38.7.1.
 #[repr(C, packed(4))]
-#[derive(Copy, Clone, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct Attributes {
-    flags: Flags,
-    xfrm: Xfrm,
+    flags: FlagSet<Flags>,
+    xfrm: XfrmWrapper,
 }
 
-impl From<Flags> for Attributes {
-    fn from(value: Flags) -> Self {
+impl From<FlagSet<Flags>> for Attributes {
+    fn from(value: FlagSet<Flags>) -> Self {
         Self {
             flags: value,
             xfrm: Default::default(),
@@ -88,8 +94,8 @@ impl From<Flags> for Attributes {
     }
 }
 
-impl From<Xfrm> for Attributes {
-    fn from(value: Xfrm) -> Self {
+impl From<XfrmWrapper> for Attributes {
+    fn from(value: XfrmWrapper) -> Self {
         Self {
             flags: Default::default(),
             xfrm: value,
@@ -99,17 +105,17 @@ impl From<Xfrm> for Attributes {
 
 impl Attributes {
     /// Creates new Attributes struct from Flags and Xfrm.
-    pub const fn new(flags: Flags, xfrm: Xfrm) -> Self {
+    pub const fn new(flags: FlagSet<Flags>, xfrm: XfrmWrapper) -> Self {
         Self { flags, xfrm }
     }
 
     /// Returns flags value of Attributes.
-    pub const fn flags(&self) -> Flags {
+    pub const fn flags(&self) -> FlagSet<Flags> {
         self.flags
     }
 
     /// Returns xfrm value of Attributes.
-    pub const fn xfrm(&self) -> Xfrm {
+    pub const fn xfrm(&self) -> XfrmWrapper {
         self.xfrm
     }
 
@@ -134,7 +140,7 @@ impl core::ops::Not for Attributes {
     fn not(self) -> Self {
         Attributes {
             flags: !self.flags,
-            xfrm: !self.xfrm,
+            xfrm: XfrmWrapper(!self.xfrm.0),
         }
     }
 }
@@ -145,7 +151,7 @@ impl core::ops::BitAnd for Attributes {
     fn bitand(self, other: Self) -> Self {
         Attributes {
             flags: self.flags & other.flags,
-            xfrm: self.xfrm & other.xfrm,
+            xfrm: XfrmWrapper(self.xfrm.0 & other.xfrm.0),
         }
     }
 }
@@ -156,7 +162,7 @@ impl core::ops::BitOr for Attributes {
     fn bitor(self, other: Self) -> Self {
         Attributes {
             flags: self.flags | other.flags,
-            xfrm: self.xfrm | other.xfrm,
+            xfrm: XfrmWrapper(self.xfrm.0 | other.xfrm.0),
         }
     }
 }
@@ -167,7 +173,7 @@ impl core::ops::BitXor for Attributes {
     fn bitxor(self, other: Self) -> Self {
         Attributes {
             flags: self.flags ^ other.flags,
-            xfrm: self.xfrm ^ other.xfrm,
+            xfrm: XfrmWrapper(self.xfrm.0 ^ other.xfrm.0),
         }
     }
 }

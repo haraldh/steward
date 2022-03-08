@@ -3,6 +3,7 @@
 //! The QuoteHeader is part of the Quote structure. See the Quote module for more.
 
 use super::QuoteError;
+#[cfg(test)]
 use crate::testaso;
 use core::convert::TryFrom;
 

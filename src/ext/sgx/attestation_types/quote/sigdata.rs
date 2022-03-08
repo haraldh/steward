@@ -4,7 +4,7 @@
 
 use super::QuoteError;
 use crate::ext::sgx::attestation_types::report::Body;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Result};
 use der::{asn1::UIntBytes, Decodable, Encodable, Sequence};
 use openssl::x509::X509;
 use std::{convert::TryFrom, fmt, vec::Vec};

@@ -3,32 +3,28 @@
 //! Page SecInfo (Section 38.11)
 //! These structs specify metadata about en enclave page.
 
-use bitflags::bitflags;
+use flagset::{flags, FlagSet};
 
+#[cfg(test)]
 use crate::testaso;
 
-bitflags! {
+flags! {
     /// The `Flags` of a page
     ///
     /// Section 38.11.1
-    pub struct Flags: u8 {
+    pub enum Flags: u8 {
         /// The page can be read from inside the enclave.
-        const R = 1 << 0;
-
+        R = 1 << 0,
         /// The page can be written from inside the enclave.
-        const W = 1 << 1;
-
+        W = 1 << 1,
         /// The page can be executed from inside the enclave.
-        const X = 1 << 2;
-
+        X = 1 << 2,
         /// The page is in the PENDING state.
-        const PENDING = 1 << 3;
-
+        PENDING = 1 << 3,
         /// The page is in the MODIFIED state.
-        const MODIFIED = 1 << 4;
-
+        MODIFIED = 1 << 4,
         /// A permission restriction operation on the page is in progress.
-        const PR = 1 << 5;
+        PR = 1 << 5
     }
 }
 
@@ -63,7 +59,7 @@ pub enum Class {
 #[repr(C, align(64))]
 pub struct SecInfo {
     /// Section 38.11.1
-    pub flags: Flags,
+    pub flags: FlagSet<Flags>,
     /// Section 38.11.2
     pub class: Class,
     reserved: [u16; 31],
@@ -80,7 +76,7 @@ impl core::fmt::Debug for SecInfo {
 
 impl SecInfo {
     /// Creates a SecInfo (page) of class type Regular.
-    pub const fn reg(flags: Flags) -> Self {
+    pub const fn reg(flags: FlagSet<Flags>) -> Self {
         Self {
             flags,
             class: Class::Reg,
@@ -89,9 +85,9 @@ impl SecInfo {
     }
 
     /// Creates a SecInfo (page) of class type TCS.
-    pub const fn tcs() -> Self {
+    pub fn tcs() -> Self {
         Self {
-            flags: Flags::empty(),
+            flags: FlagSet::default(),
             class: Class::Tcs,
             reserved: [0; 31],
         }
