@@ -7,6 +7,3 @@
 pub mod attr;
 pub mod isv;
 pub mod misc;
-pub mod page;
-pub mod secs;
-pub mod sig;
