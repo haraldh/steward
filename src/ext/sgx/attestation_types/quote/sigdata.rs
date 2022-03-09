@@ -35,14 +35,6 @@ impl From<&[u8; 64]> for ECDSAP256Sig {
 }
 
 impl ECDSAP256Sig {
-    /// Returns Vec<u8> of r component followed by s component
-    pub fn to_vec(self) -> Vec<u8> {
-        let mut vec: Vec<u8> = Vec::new();
-        vec.extend(&self.r);
-        vec.extend(&self.s);
-        vec
-    }
-
     /// Converts the concatenated signature to a der signature.
     pub fn to_der(mut self) -> Result<Vec<u8>> {
         /// ECDSA-Sig-Value ::= SEQUENCE {
@@ -55,8 +47,8 @@ impl ECDSAP256Sig {
             s: UIntBytes<'a>,
         }
 
-        // self.r.reverse();
-        // self.s.reverse();
+        self.r.reverse();
+        self.s.reverse();
 
         let es = EcdsaSig {
             r: UIntBytes::new(&self.r)?,
