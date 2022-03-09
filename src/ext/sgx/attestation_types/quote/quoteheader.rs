@@ -66,7 +66,7 @@ pub struct QuoteHeader {
     /// Security version of the QE.
     pub qe_svn: u16,
 
-    /// Security version of the Provisioning Cerfitication Enclave.
+    /// Security version of the Provisioning Certification Enclave.
     pub pce_svn: u16,
 
     /// ID of the QE vendor.

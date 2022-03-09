@@ -74,8 +74,8 @@ impl ExtVerifier for Sgx {
         // security for the whole chain.
         //
         // We solve this by using forcing the certification request to have
-        // the same key type as the VCEK. This means we have no worse security
-        // than whatever AMD chose for the VCEK.
+        // the same key type as the PCK. This means we have no worse security
+        // than whatever Intel chose for the PCK.
         //
         // Additionally, we do this check early to be defensive.
         if cri.public_key.algorithm != pck.subject_public_key_info.algorithm {
