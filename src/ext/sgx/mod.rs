@@ -82,6 +82,8 @@ impl ExtVerifier for Sgx {
             return Err(anyhow!("sgx pck algorithm mismatch"));
         }
 
+        // dbg!(cri.public_key.algorithm.oids()); // TODO: verify this
+
         // Extract the quote and its signature.
         let quote = Quote::try_from(evidence.quote).context("sgx quote parse error")?;
 
@@ -104,7 +106,9 @@ impl ExtVerifier for Sgx {
         // .context("sgx quote contains invalid signature")?;
 
         // TODO: validate report
-        if !dbg {}
+        if !dbg {
+            // dbg!(quote.header().att_key_type); // TODO: verify this
+        }
 
         Ok(true)
     }
