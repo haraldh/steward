@@ -62,7 +62,7 @@ const QUOTE_SIG_START: usize = 436;
 // Quote Signature Layout consts
 const ISV_ENCLAVE_REPORT_SIG_LEN: usize = 64;
 const ATT_KEY_PUB_LEN: usize = 64;
-const QE_REPORT_START: usize = QUOTE_SIG_START + ISV_ENCLAVE_REPORT_SIG_LEN + ATT_KEY_PUB_LEN;
+pub const QE_REPORT_START: usize = QUOTE_SIG_START + ISV_ENCLAVE_REPORT_SIG_LEN + ATT_KEY_PUB_LEN;
 const QE_REPORTDATA_START: usize = QE_REPORT_START + REPORTDATA_START;
 
 #[derive(Clone, Debug)]

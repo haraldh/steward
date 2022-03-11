@@ -122,7 +122,6 @@ impl Attributes {
     }
 
     /// Returns Attributes as a Vec<u8>
-    #[cfg(feature = "std")]
     pub fn to_vec(&self) -> Vec<u8> {
         let mut v = Vec::new();
         unsafe {

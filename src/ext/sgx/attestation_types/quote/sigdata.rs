@@ -4,7 +4,7 @@
 
 use super::QuoteError;
 use crate::ext::sgx::attestation_types::report::Body;
-use anyhow::{Result};
+use anyhow::Result;
 use der::{asn1::UIntBytes, Encodable, Sequence};
 use std::{convert::TryFrom, fmt, vec::Vec};
 use x509::Certificate;
@@ -47,8 +47,8 @@ impl ECDSAP256Sig {
             s: UIntBytes<'a>,
         }
 
-        self.r.reverse();
-        self.s.reverse();
+        //self.r.reverse();
+        //self.s.reverse();
 
         let es = EcdsaSig {
             r: UIntBytes::new(&self.r)?,

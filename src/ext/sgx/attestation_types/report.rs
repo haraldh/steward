@@ -160,7 +160,6 @@ impl TryFrom<&[u8; 384]> for Body {
 
 impl Body {
     /// Returns a Vec<u8> representation of Body
-    #[cfg(feature = "std")]
     pub fn to_vec(&self) -> Vec<u8> {
         let mut vec: Vec<u8> = Vec::new();
 

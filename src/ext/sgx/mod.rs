@@ -7,6 +7,7 @@ use crate::crypto::*;
 
 use std::fmt::Debug;
 
+use crate::ext::sgx::attestation_types::quote::QE_REPORT_START;
 use anyhow::{anyhow, Context, Result};
 use attestation_types::quote::Quote;
 use const_oid::db::rfc5912::ECDSA_WITH_SHA_256;
@@ -87,15 +88,15 @@ impl ExtVerifier for Sgx {
         // Extract the quote and its signature.
         let quote = Quote::try_from(evidence.quote).context("sgx quote parse error")?;
 
-        let body: [u8; 384] = unsafe { std::mem::transmute(*quote.body()) };
+        let sig_body = &evidence.quote[QE_REPORT_START..QE_REPORT_START + 384];
         let signature = quote
             .sigdata()
-            .report_sig()
+            .qe_report_sig()
             .to_der()
             .context("sgx quote signature parse error")?;
 
         pck.verify_raw(
-            &body,
+            sig_body,
             AlgorithmIdentifier {
                 oid: ECDSA_WITH_SHA_256,
                 parameters: None,
