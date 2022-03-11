@@ -88,7 +88,7 @@ impl ExtVerifier for Sgx {
         // Extract the quote and its signature.
         let quote = Quote::try_from(evidence.quote).context("sgx quote parse error")?;
 
-        let sig_body = &evidence.quote[QE_REPORT_START..QE_REPORT_START + 384];
+        let sig_body = quote.sigdata().qe_report().to_vec();
         let signature = quote
             .sigdata()
             .qe_report_sig()
@@ -96,15 +96,14 @@ impl ExtVerifier for Sgx {
             .context("sgx quote signature parse error")?;
 
         pck.verify_raw(
-            sig_body,
+            &sig_body,
             AlgorithmIdentifier {
                 oid: ECDSA_WITH_SHA_256,
                 parameters: None,
             },
             &signature,
         )
-        .unwrap();
-        // .context("sgx quote contains invalid signature")?;
+        .context("sgx quote contains invalid signature")?;
 
         // TODO: validate report
         if !dbg {

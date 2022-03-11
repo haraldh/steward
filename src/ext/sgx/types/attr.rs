@@ -125,11 +125,8 @@ impl Attributes {
     pub fn to_vec(&self) -> Vec<u8> {
         let mut v = Vec::new();
         unsafe {
-            let byte_slice = core::slice::from_raw_parts(
-                &self as *const _ as *const u8,
-                core::mem::size_of::<Self>(),
-            );
-            v.extend_from_slice(byte_slice);
+            v.extend(&self.flags.bits().to_le_bytes());
+            v.extend(&self.xfrm.0.bits().to_le_bytes());
         }
         v
     }

@@ -5,11 +5,7 @@
 
 #![allow(missing_docs)]
 
-use super::super::types::{
-    attr::{Attributes, Flags, Xfrm},
-    isv,
-    misc::MiscSelect,
-};
+use super::super::types::{attr::Attributes, isv, misc::MiscSelect};
 
 use core::{convert::TryFrom, default::Default};
 
