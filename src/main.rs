@@ -1,3 +1,5 @@
+#![warn(rust_2018_idioms, unused_lifetimes, unused_qualifications, clippy::all)]
+
 mod crypto;
 mod ext;
 
@@ -15,7 +17,7 @@ use std::time::{Duration, SystemTime};
 use axum::body::Bytes;
 use axum::extract::{Extension, TypedHeader};
 use axum::headers::ContentType;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::Router;
 use hyper::StatusCode;
 use mime::Mime;
@@ -29,7 +31,7 @@ use x509::ext::pkix::{BasicConstraints, KeyUsage, KeyUsages};
 use x509::name::RdnSequence;
 use x509::request::{CertReq, ExtensionReq};
 use x509::time::{Time, Validity};
-use x509::{Certificate, TbsCertificate};
+use x509::{Certificate, PkiPath, TbsCertificate};
 
 use clap::Parser;
 use zeroize::Zeroizing;
@@ -71,11 +73,11 @@ impl State {
         let pki = PrivateKeyInfo::from_der(key.as_ref())?;
 
         // Create a relative distinguished name.
-        let rdns = RdnSequence::parse(&format!("CN={}", hostname))?;
+        let rdns = RdnSequence::encode_from_string(&format!("CN={}", hostname))?;
         let rdns = RdnSequence::from_der(&rdns)?;
 
         // Create the extensions.
-        let ku = KeyUsage::from(KeyUsages::KeyCertSign).to_vec()?;
+        let ku = KeyUsage(KeyUsages::KeyCertSign.into()).to_vec()?;
         let bc = BasicConstraints {
             ca: true,
             path_len_constraint: Some(0),
@@ -146,7 +148,12 @@ async fn main() -> anyhow::Result<()> {
 fn app(state: State) -> Router {
     Router::new()
         .route("/", post(attest))
+        .route("/", get(health))
         .layer(Extension(Arc::new(state)))
+}
+
+async fn health() -> StatusCode {
+    StatusCode::OK
 }
 
 async fn attest(
@@ -177,7 +184,7 @@ async fn attest(
         }
 
         for any in attr.values.iter() {
-            let ereq: ExtensionReq = any.decode_into().or(Err(StatusCode::BAD_REQUEST))?;
+            let ereq: ExtensionReq<'_> = any.decode_into().or(Err(StatusCode::BAD_REQUEST))?;
             for ext in Vec::from(ereq) {
                 // If the issuer is self-signed, we are in debug mode.
                 let iss = &issuer.tbs_certificate;
@@ -233,9 +240,15 @@ async fn attest(
     };
 
     // Sign the certificate.
-    Ok(tbs
+    let crt = tbs
         .sign(&isskey)
-        .or(Err(StatusCode::INTERNAL_SERVER_ERROR))?)
+        .or(Err(StatusCode::INTERNAL_SERVER_ERROR))?;
+    let crt = Certificate::from_der(&crt).or(Err(StatusCode::INTERNAL_SERVER_ERROR))?;
+
+    // Create and return the PkiPath.
+    PkiPath::from(vec![issuer, crt])
+        .to_vec()
+        .or(Err(StatusCode::INTERNAL_SERVER_ERROR))
 }
 
 #[cfg(test)]
@@ -322,9 +335,11 @@ mod tests {
             assert_eq!(response.status(), StatusCode::OK);
 
             let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-            let sub = Certificate::from_der(&body).unwrap();
-            let iss = Certificate::from_der(CRT).unwrap();
-            iss.tbs_certificate.verify_crt(&sub).unwrap();
+            let path = PkiPath::from_der(&body).unwrap();
+            let issr = Certificate::from_der(CRT).unwrap();
+            assert_eq!(2, path.0.len());
+            assert_eq!(issr, path.0[0]);
+            issr.tbs_certificate.verify_crt(&path.0[1]).unwrap();
         }
 
         #[tokio::test]
@@ -353,9 +368,11 @@ mod tests {
             assert_eq!(response.status(), StatusCode::OK);
 
             let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-            let sub = Certificate::from_der(&body).unwrap();
-            let iss = Certificate::from_der(CRT).unwrap();
-            iss.tbs_certificate.verify_crt(&sub).unwrap();
+            let path = PkiPath::from_der(&body).unwrap();
+            let issr = Certificate::from_der(CRT).unwrap();
+            assert_eq!(2, path.0.len());
+            assert_eq!(issr, path.0[0]);
+            issr.tbs_certificate.verify_crt(&path.0[1]).unwrap();
         }
 
         #[tokio::test]
@@ -384,9 +401,11 @@ mod tests {
             assert_eq!(response.status(), StatusCode::OK);
 
             let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-            let sub = Certificate::from_der(&body).unwrap();
-            let iss = Certificate::from_der(CRT).unwrap();
-            iss.tbs_certificate.verify_crt(&sub).unwrap();
+            let path = PkiPath::from_der(&body).unwrap();
+            let issr = Certificate::from_der(CRT).unwrap();
+            assert_eq!(2, path.0.len());
+            assert_eq!(issr, path.0[0]);
+            issr.tbs_certificate.verify_crt(&path.0[1]).unwrap();
         }
 
         #[tokio::test]
